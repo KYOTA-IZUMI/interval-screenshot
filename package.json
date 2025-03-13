@@ -1,0 +1,28 @@
+{
+  "name": "worklog-app",
+  "version": "1.0.0",
+  "description": "Screen capture utility for work logging",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "com.worklog.app",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dmg"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^29.1.0",
+    "electron-builder": "^24.12.0"
+  },
+  "dependencies": {
+    "screenshot-desktop": "^1.15.1",
+    "simple-git": "^3.27.0"
+  }
+}
