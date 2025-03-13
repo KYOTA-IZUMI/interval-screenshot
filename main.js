@@ -126,6 +126,32 @@ async function createDailyReport() {
     const reportFilename = `${todayPrefix}_report.html`;
     const reportPath = path.join(reportsDir, reportFilename);
     
+    // 時間帯ごとにスクリーンショットをグループ化
+    const timeGroups = {};
+    
+    for (const file of todayFiles) {
+      // ファイル名から時間を抽出（wl_YYYYMMDD_HHMMSS.jpg/png）
+      const timeMatch = file.match(/_(\d{2})(\d{2})(\d{2})\./);
+      
+      if (timeMatch) {
+        const hours = timeMatch[1];
+        const minutes = timeMatch[2];
+        const seconds = timeMatch[3];
+        
+        // 時間帯（1時間ごと）でグループ化
+        const timeGroup = `${hours}:00 - ${hours}:59`;
+        
+        if (!timeGroups[timeGroup]) {
+          timeGroups[timeGroup] = [];
+        }
+        
+        timeGroups[timeGroup].push({
+          file,
+          time: `${hours}:${minutes}:${seconds}`
+        });
+      }
+    }
+    
     // HTMLレポートを作成
     let htmlContent = `
     <!DOCTYPE html>
@@ -147,6 +173,23 @@ async function createDailyReport() {
           text-align: center;
           margin-bottom: 30px;
         }
+        h2 {
+          color: #333;
+          border-bottom: 2px solid #007AFF;
+          padding-bottom: 5px;
+          margin-top: 40px;
+          margin-bottom: 20px;
+        }
+        .summary {
+          background-color: white;
+          border-radius: 8px;
+          padding: 15px;
+          margin-bottom: 30px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary p {
+          margin: 5px 0;
+        }
         .screenshot-container {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -157,6 +200,10 @@ async function createDailyReport() {
           border-radius: 8px;
           overflow: hidden;
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          transition: transform 0.2s;
+        }
+        .screenshot-item:hover {
+          transform: scale(1.02);
         }
         .screenshot-item img {
           width: 100%;
@@ -170,43 +217,110 @@ async function createDailyReport() {
         .screenshot-time {
           font-weight: 500;
         }
+        .time-navigation {
+          position: sticky;
+          top: 0;
+          background-color: white;
+          padding: 10px;
+          margin-bottom: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          z-index: 100;
+        }
+        .time-navigation ul {
+          display: flex;
+          flex-wrap: wrap;
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .time-navigation li {
+          margin-right: 10px;
+          margin-bottom: 5px;
+        }
+        .time-navigation a {
+          display: inline-block;
+          padding: 5px 10px;
+          background-color: #e9ecef;
+          color: #495057;
+          text-decoration: none;
+          border-radius: 4px;
+        }
+        .time-navigation a:hover {
+          background-color: #007AFF;
+          color: white;
+        }
+        .back-to-top {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          background-color: #007AFF;
+          color: white;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .back-to-top:hover {
+          background-color: #0056b3;
+        }
       </style>
     </head>
     <body>
       <h1>WorkLog Daily Report - ${today}</h1>
-      <div class="screenshot-container">
+      
+      <div class="summary">
+        <p><strong>Total Screenshots:</strong> ${todayFiles.length}</p>
+        <p><strong>Time Periods:</strong> ${Object.keys(timeGroups).length}</p>
+        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+      </div>
+      
+      <div class="time-navigation">
+        <ul>
+          ${Object.keys(timeGroups).map(timeGroup => 
+            `<li><a href="#time-${timeGroup.replace(/[^0-9]/g, '')}">${timeGroup}</a></li>`
+          ).join('')}
+        </ul>
+      </div>
     `;
     
-    // 各スクリーンショットをHTMLに追加
-    for (const file of todayFiles) {
-      const filePath = path.join(screenshotsDir, file);
-      
-      // ファイル名から時間を抽出（wl_YYYYMMDD_HHMMSS.jpg/png）
-      const timeMatch = file.match(/_(\d{2})(\d{2})(\d{2})\./);
-      let timeStr = '';
-      
-      if (timeMatch) {
-        const hours = timeMatch[1];
-        const minutes = timeMatch[2];
-        const seconds = timeMatch[3];
-        timeStr = `${hours}:${minutes}:${seconds}`;
-      }
-      
-      // 相対パスを計算
-      const relativeFilePath = path.relative(reportsDir, filePath).replace(/\\/g, '/');
+    // 時間帯ごとにスクリーンショットを追加
+    for (const timeGroup of Object.keys(timeGroups).sort()) {
+      const screenshots = timeGroups[timeGroup];
       
       htmlContent += `
-        <div class="screenshot-item">
-          <img src="${relativeFilePath}" alt="Screenshot at ${timeStr}">
-          <div class="screenshot-info">
-            <div class="screenshot-time">${timeStr}</div>
+        <h2 id="time-${timeGroup.replace(/[^0-9]/g, '')}">${timeGroup} (${screenshots.length} screenshots)</h2>
+        <div class="screenshot-container">
+      `;
+      
+      // 各スクリーンショットをHTMLに追加
+      for (const screenshot of screenshots) {
+        const filePath = path.join(screenshotsDir, screenshot.file);
+        
+        // 相対パスを計算
+        const relativeFilePath = path.relative(reportsDir, filePath).replace(/\\/g, '/');
+        
+        htmlContent += `
+          <div class="screenshot-item">
+            <img src="${relativeFilePath}" alt="Screenshot at ${screenshot.time}">
+            <div class="screenshot-info">
+              <div class="screenshot-time">${screenshot.time}</div>
+            </div>
           </div>
+        `;
+      }
+      
+      htmlContent += `
         </div>
       `;
     }
     
     htmlContent += `
-      </div>
+      <a href="#" class="back-to-top">↑</a>
     </body>
     </html>
     `;
@@ -455,6 +569,16 @@ function updateMenu() {
         }
       },
       {
+        label: 'Open Reports Folder',
+        click: () => {
+          try {
+            require('electron').shell.openPath(reportsDir);
+          } catch (error) {
+            showError('Folder Error', `Failed to open reports folder: ${error.message}`);
+          }
+        }
+      },
+      {
         label: 'Create Daily Report Now',
         click: async () => {
           try {
@@ -543,7 +667,7 @@ app.whenReady().then(async () => {
   }
 });
 
-// macOSでもウィンドウを閉じてもアプリを終了しないようにする
+// macOSでウィンドウを閉じてもアプリを終了しないようにする
 app.on('window-all-closed', () => {
   // Do nothing to keep the app running
 });
