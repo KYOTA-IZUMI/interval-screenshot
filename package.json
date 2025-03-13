@@ -1,0 +1,26 @@
+{
+  "name": "interval-screenshot",
+  "version": "1.0.0",
+  "description": "一定時間ごとにスクリーンショットを撮って保存する作業ログアプリ",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "build": {
+    "appId": "com.example.interval-screenshot",
+    "mac": {
+      "category": "public.app-category.utilities"
+    }
+  }
+} 
