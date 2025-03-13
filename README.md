@@ -1,91 +1,91 @@
 # WorkLog App
 
-作業ログを自動的に記録するためのデスクトップアプリケーションです。定期的にスクリーンショットを撮影し、Gitリポジトリで管理します。
+An automated work logging desktop application that periodically captures screenshots and manages them in a Git repository.
 
 ![WorkLog App](screenshots/app_screenshot.png)
 
-## 機能
+## Features
 
-- メニューバーから簡単に操作可能
-- カスタマイズ可能なスクリーンショット間隔
-- スクリーンショットの自動Git管理
-- スクリーンショットフォルダの簡単アクセス
+- Easy operation from the menu bar
+- Customizable screenshot intervals
+- Automatic Git management of screenshots
+- Easy access to the screenshots folder
 
-## インストール
+## Installation
 
-### 方法1: リリースからダウンロード
+### Method 1: Download from Releases
 
-1. [リリースページ](https://github.com/KYOTA-IZUMI/worklog-app/releases)から最新のDMGファイルをダウンロード
-2. ダウンロードしたDMGファイルを開き、アプリケーションをApplicationsフォルダにドラッグ＆ドロップ
-3. アプリケーションを起動
+1. Download the latest DMG file from the [releases page](https://github.com/KYOTA-IZUMI/worklog-app/releases)
+2. Open the downloaded DMG file and drag & drop the application to the Applications folder
+3. Launch the application
 
-### 方法2: ソースからビルド
+### Method 2: Build from Source
 
 ```bash
-# リポジトリをクローン
+# Clone the repository
 git clone https://github.com/KYOTA-IZUMI/worklog-app.git
 cd worklog-app
 
-# 依存パッケージをインストール
+# Install dependencies
 npm install
 
-# アプリケーションを起動
+# Launch the application
 npm start
 
-# アプリケーションをビルド（DMGファイル作成）
+# Build the application (create DMG file)
 npm run build
 ```
 
-## 使い方
+## Usage
 
-### 初回起動
+### First Launch
 
-初回起動時、アプリケーションはメニューバーにアイコンとして表示されます。
+On first launch, the application appears as an icon in the menu bar.
 
-![メニューバーアイコン](screenshots/menubar_icon.png)
+![Menu Bar Icon](screenshots/menubar_icon.png)
 
-### スクリーンショットの記録開始
+### Start Recording Screenshots
 
-1. メニューバーのアイコンをクリックしてメニューを表示
-2. 「記録を開始」をクリック
+1. Click the icon in the menu bar to display the menu
+2. Click "Start Recording"
 
-![記録開始](screenshots/start_recording.png)
+![Start Recording](screenshots/start_recording.png)
 
-記録が開始されると、設定された間隔でスクリーンショットが自動的に撮影されます。
+Once recording starts, screenshots will be automatically taken at the set interval.
 
-### 間隔の設定
+### Setting the Interval
 
-1. メニューバーのアイコンをクリックしてメニューを表示
-2. 「間隔を設定」をクリック
-3. 表示されたダイアログで秒単位で間隔を入力（最小10秒）
-4. 「保存」ボタンをクリック
+1. Click the icon in the menu bar to display the menu
+2. Click "Set Interval"
+3. Enter the interval in seconds (minimum 10 seconds) in the dialog that appears
+4. Click the "Save" button
 
-![間隔設定](screenshots/interval_settings.png)
+![Interval Settings](screenshots/interval_settings.png)
 
-### スクリーンショットフォルダを開く
+### Opening the Screenshots Folder
 
-1. メニューバーのアイコンをクリックしてメニューを表示
-2. 「フォルダを開く」をクリック
+1. Click the icon in the menu bar to display the menu
+2. Click "Open Folder"
 
-スクリーンショットは `~/Documents/WorkLog/screenshots` フォルダに保存され、Gitリポジトリとして管理されます。
+Screenshots are saved in the `~/Documents/WorkLog/screenshots` folder and managed as a Git repository.
 
-![スクリーンショットフォルダ](screenshots/screenshots_folder.png)
+![Screenshots Folder](screenshots/screenshots_folder.png)
 
-### 記録の停止
+### Stop Recording
 
-1. メニューバーのアイコンをクリックしてメニューを表示
-2. 「記録を停止」をクリック
+1. Click the icon in the menu bar to display the menu
+2. Click "Stop Recording"
 
-## 開発
+## Development
 
 ```bash
-# 開発モードで実行
+# Run in development mode
 npm start
 
-# アプリケーションをビルド
+# Build the application
 npm run build
 ```
 
-## ライセンス
+## License
 
 MIT 
