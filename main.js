@@ -3,6 +3,9 @@ const path = require('path');
 const screenshot = require('screenshot-desktop');
 const simpleGit = require('simple-git');
 const fs = require('fs').promises;
+const { createCanvas, loadImage } = require('canvas');
+const GIFEncoder = require('gifencoder');
+const sharp = require('sharp');
 
 // アイコンデータ（Base64エンコード）- より洗練されたカメラアイコン
 const iconData = `iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAARjSURBVFiFtZdbbBRVGMd/Z2Z32e52u+1uW6BAW6BFLgUF5WKQmKgxaiIJGhJfTAgPJj5oTPTFxMQXE318MTEEE33AB2OCXEzAcAkCAcIlSi+U0pZ2t9vdbbfb3e7OzPFhd9ll293OpZzkZGbO+c7/9805c74zQpqmABuBZ4H7gQVAzk3TReAk8BXwJaCnGyTSCFABvAfsAHJvw1cH9gL7gJ+nEyJVgEeBj4HlM0l9C6eAV4Gfkhmb0wR4HvgGyLtDx5HIA14EPgCMRIZKgvGdwOe3cW4CZZiGiVAEQhFpO48kC/gQKAZ2xxvEC1AJfA/kpHJsGiZnB8/yS/8v9A/3Y9kWpmVimRaWZQFgGAaGbqAbOjnuHCryK1hXtI6FuQtTDZEDvABcAX6LNYgV4FHgMJCdyrGu6xw5f4QfLvxAz1BPSvt4lOeX82TZk2wq2YSu6MnMB4HNwLFIRySABXxPmvJblsUPF37g0NlDDI4NphMhKQW5BWxftJ2Hi1JeVl3AJuBCZCcCe4Cn0jnUNI1D5w5x9OLRtM5TYWXBSp5Z+gx5nrxkpjrwGvBRZMcNbAMOpnOm6zqHzx3mWM+xZKZTYlkWmqahqRqaplFgFvBY8WOUuEpQhIKu6OiKjlDEpL0QgqfLnqbIW8SXp7/EsqxxY+AQsB1oBXABR4D1qZwZhsHhrsP82PVjUuGWZdHZ30lTZxOtva10D3bTM9RD/0g/o/oopmWiCpUsTxaFOYWU5JawLH8Za4vWUpZXNjFGU2cTB04dwLTMeNcngPXAqBvYQRrnpmny3dnvONp9NKldJDRN003rQCvHe47T0tvCmDGGK8NFjjuHbHc2Xo8Xj+5BVVRMy2RMH2NoYoiugS7a+9rRFI3lBct5YP4DrClaQ3NXM1+d+QrDMuJdrwc2u4HXSZPzTd1NvNf0XkrnEQzpQ5zoPcHxnuMMjg3idXspzStlRcEKluUvY0HOAjxuz6S9aZmM6qP0DPVwtu8szV3NtPS2UJhTyM7VO/G6vfFDvO4G6oBFyZyOG+O809BaWgdak9pFQjd1Wvta+a3nN452H0URCgvzFrK2aC1ritZQkl2CpqTOZUIIvB4vZXllrCtex9YlW/G4PJP2QFcbqAZKkzlr7W3l/ab3GdPHUjqPYHBskKauJn7t/pWB0QHyPHlsLNnIQ/MfYlHuorTOE0EIgcftSbS/5AZKSJHzDd0NvNv4LqZlpnUOYFkWHf0dHLlwhObeZlRFZXXhah4vfZyVBStRFXXGzqeDEKLLDcwjSc439jRyoOUAhmXMyLllWXT2d/Lzpd/5o/cPTMukPL+cLWVbWF+8Hpeauq5MF0KIPjewINGgoa+B95veRzd1ZgLLsugZ6uFo91F+7/kdwzIozSvl6bKn2VS6CY/Lc8fOIxFCXHUDnngDXdfZ37yfUX10xs4jGDfGae5q5nj3cYb1YQpyCnhx5YtsLt2MqqgzHzQOQohRN3A50iCEYGR8hOHx4TtyHoEQAq/by8vVL7OldAuKSF1gZgIhxJgbOBHbPzg2yJgxdsfOI/C6vWwu3Zz2/+FMIYQYcQNfAK2x/blZuXhd3v9VgNb/APz5KK+FBU9lAAAAAElFTkSuQmCC`;
@@ -12,11 +15,13 @@ let isRecording = false;
 let screenshotInterval = 300000; // デフォルト5分
 let screenshotTimer = null;
 let settingsWindow = null;
+let dailyGifTimer = null;
 
 // アプリケーションの設定を保存するディレクトリ
 const configDir = path.join(app.getPath('documents'), 'WorkLog');
 const configFile = path.join(configDir, 'config.json');
 const screenshotsDir = path.join(configDir, 'screenshots');
+const gifDir = path.join(configDir, 'daily_gifs');
 
 // デフォルト設定
 const defaultConfig = {
@@ -24,7 +29,11 @@ const defaultConfig = {
   autoStart: false, // 起動時に自動的に記録を開始するかどうか
   notifications: true, // スクリーンショット撮影時に通知を表示するかどうか
   startAtLogin: false, // ログイン時に自動的に起動するかどうか
-  gitEnabled: true // Gitリポジトリを使用するかどうか
+  gitEnabled: true, // Gitリポジトリを使用するかどうか
+  compressToJpeg: true, // JPEGに圧縮するかどうか
+  jpegQuality: 80, // JPEG圧縮品質（0-100）
+  createDailyGif: false, // 毎日GIFを作成するかどうか
+  dailyGifTime: "18:00" // GIF作成時刻（24時間形式）
 };
 
 let appConfig = { ...defaultConfig };
@@ -37,6 +46,7 @@ async function initializeApp() {
     // 設定ディレクトリの作成
     await fs.mkdir(configDir, { recursive: true });
     await fs.mkdir(screenshotsDir, { recursive: true });
+    await fs.mkdir(gifDir, { recursive: true });
 
     // 設定ファイルの読み込み
     await loadConfig();
@@ -55,8 +65,108 @@ async function initializeApp() {
     if (appConfig.autoStart) {
       toggleRecording();
     }
+
+    // 毎日のGIF作成タイマーを設定
+    if (appConfig.createDailyGif) {
+      scheduleDailyGif();
+    }
   } catch (error) {
     showError('Initialization Error', `Failed to initialize the application: ${error.message}`);
+  }
+}
+
+/**
+ * 毎日のGIF作成タイマーをスケジュールする
+ */
+function scheduleDailyGif() {
+  // 既存のタイマーをクリア
+  if (dailyGifTimer) {
+    clearTimeout(dailyGifTimer);
+  }
+
+  // 次の実行時間を計算
+  const now = new Date();
+  const [hours, minutes] = appConfig.dailyGifTime.split(':').map(Number);
+  const targetTime = new Date(now);
+  targetTime.setHours(hours, minutes, 0, 0);
+  
+  // 既に今日の時間を過ぎている場合は明日にスケジュール
+  if (now > targetTime) {
+    targetTime.setDate(targetTime.getDate() + 1);
+  }
+  
+  const timeUntilTarget = targetTime - now;
+  
+  // タイマーを設定
+  dailyGifTimer = setTimeout(async () => {
+    await createDailyGif();
+    scheduleDailyGif(); // 次の日のタイマーを設定
+  }, timeUntilTarget);
+}
+
+/**
+ * 今日撮影したスクリーンショットからGIFを作成する
+ */
+async function createDailyGif() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const todayPrefix = `wl_${today.replace(/-/g, '')}`;
+    
+    // 今日のスクリーンショットを取得
+    const files = await fs.readdir(screenshotsDir);
+    const todayFiles = files.filter(file => file.startsWith(todayPrefix) && (file.endsWith('.png') || file.endsWith('.jpg')));
+    
+    if (todayFiles.length === 0) {
+      console.log('No screenshots found for today');
+      return;
+    }
+    
+    // ファイルを時間順にソート
+    todayFiles.sort();
+    
+    // GIFファイル名
+    const gifFilename = `${todayPrefix}_summary.gif`;
+    const gifPath = path.join(gifDir, gifFilename);
+    
+    // GIFエンコーダーを設定
+    const encoder = new GIFEncoder(800, 600);
+    const stream = encoder.createReadStream().pipe(fs.createWriteStream(gifPath));
+    
+    encoder.start();
+    encoder.setRepeat(0);   // 0 = 無限ループ
+    encoder.setDelay(500);  // フレーム間の遅延（ミリ秒）
+    encoder.setQuality(10); // 画質（低いほど高品質）
+    
+    // 各スクリーンショットをGIFに追加
+    for (const file of todayFiles) {
+      const filePath = path.join(screenshotsDir, file);
+      const image = await loadImage(filePath);
+      
+      // キャンバスを作成してイメージをリサイズ
+      const canvas = createCanvas(800, 600);
+      const ctx = canvas.getContext('2d');
+      
+      // 画像をキャンバスに描画（リサイズ）
+      ctx.drawImage(image, 0, 0, 800, 600);
+      
+      // フレームを追加
+      encoder.addFrame(ctx);
+    }
+    
+    encoder.finish();
+    
+    // 通知を表示
+    if (appConfig.notifications) {
+      new Notification({
+        title: 'WorkLog - Daily Summary',
+        body: `Created daily summary GIF with ${todayFiles.length} screenshots`
+      }).show();
+    }
+    
+    return gifPath;
+  } catch (error) {
+    console.error('Error creating daily GIF:', error);
+    showError('GIF Creation Error', `Failed to create daily GIF: ${error.message}`);
   }
 }
 
@@ -108,6 +218,8 @@ async function saveConfig() {
  */
 async function updateConfig(newConfig) {
   try {
+    const oldConfig = { ...appConfig };
+    
     // 設定を更新
     appConfig = { ...appConfig, ...newConfig };
     
@@ -127,6 +239,16 @@ async function updateConfig(newConfig) {
       clearInterval(screenshotTimer);
       screenshotTimer = setInterval(takeScreenshot, screenshotInterval);
     }
+    
+    // 毎日のGIF作成設定が変更された場合
+    if (oldConfig.createDailyGif !== appConfig.createDailyGif || 
+        oldConfig.dailyGifTime !== appConfig.dailyGifTime) {
+      if (appConfig.createDailyGif) {
+        scheduleDailyGif();
+      } else if (dailyGifTimer) {
+        clearTimeout(dailyGifTimer);
+      }
+    }
   } catch (error) {
     showError('Configuration Error', `Failed to update configuration: ${error.message}`);
   }
@@ -137,11 +259,42 @@ async function updateConfig(newConfig) {
  */
 async function takeScreenshot() {
   try {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `screenshot-${timestamp}.png`;
-    const filepath = path.join(screenshotsDir, filename);
+    // 現在の日時を取得
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
     
-    await screenshot({ filename: filepath });
+    // ファイル名を生成（wl_YYYYMMDD_HHMMSS.png）
+    const dateStr = `${year}${month}${day}`;
+    const timeStr = `${hours}${minutes}${seconds}`;
+    const baseFilename = `wl_${dateStr}_${timeStr}`;
+    
+    // 一時的なPNGファイルパス
+    const tempPngPath = path.join(screenshotsDir, `${baseFilename}_temp.png`);
+    
+    // 最終的なファイルパス
+    const finalFilename = appConfig.compressToJpeg ? `${baseFilename}.jpg` : `${baseFilename}.png`;
+    const finalFilePath = path.join(screenshotsDir, finalFilename);
+    
+    // スクリーンショットを撮影（一時的にPNGとして保存）
+    await screenshot({ filename: tempPngPath });
+    
+    // JPEGに圧縮する場合
+    if (appConfig.compressToJpeg) {
+      await sharp(tempPngPath)
+        .jpeg({ quality: appConfig.jpegQuality })
+        .toFile(finalFilePath);
+      
+      // 一時ファイルを削除
+      await fs.unlink(tempPngPath);
+    } else {
+      // PNGのままの場合は、ファイル名を変更
+      await fs.rename(tempPngPath, finalFilePath);
+    }
     
     // 通知を表示（設定で有効になっている場合のみ）
     if (appConfig.notifications) {
@@ -154,8 +307,8 @@ async function takeScreenshot() {
     // Gitリポジトリを使用する場合のみコミット
     if (appConfig.gitEnabled) {
       const git = simpleGit(screenshotsDir);
-      await git.add(filepath);
-      await git.commit(`Screenshot taken at ${timestamp}`);
+      await git.add(finalFilePath);
+      await git.commit(`Screenshot taken at ${dateStr} ${timeStr}`);
     }
   } catch (error) {
     console.error('Screenshot error:', error);
@@ -199,8 +352,8 @@ function showSettingsWindow() {
 
   try {
     settingsWindow = new BrowserWindow({
-      width: 300,
-      height: 150,
+      width: 450,
+      height: 500,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false
@@ -229,16 +382,29 @@ function updateMenu() {
         click: toggleRecording
       },
       {
-        label: 'Set Interval',
+        label: 'Settings',
         click: showSettingsWindow
       },
       {
-        label: 'Open Folder',
+        label: 'Open Screenshots Folder',
         click: () => {
           try {
             require('electron').shell.openPath(screenshotsDir);
           } catch (error) {
             showError('Folder Error', `Failed to open screenshots folder: ${error.message}`);
+          }
+        }
+      },
+      {
+        label: 'Create Daily GIF Now',
+        click: async () => {
+          try {
+            const gifPath = await createDailyGif();
+            if (gifPath) {
+              require('electron').shell.openPath(path.dirname(gifPath));
+            }
+          } catch (error) {
+            showError('GIF Error', `Failed to create GIF: ${error.message}`);
           }
         }
       },
@@ -303,16 +469,27 @@ app.whenReady().then(async () => {
     
     // Base64データからアイコンを作成
     const icon = nativeImage.createFromDataURL(`data:image/png;base64,${iconData}`);
+    
+    // メニューバーにアイコンを表示
     tray = new Tray(icon);
     updateMenu();
+    
+    // アイコンをクリックしたときに設定ウィンドウを表示
+    tray.on('click', () => {
+      showSettingsWindow();
+    });
   } catch (error) {
     showError('Startup Error', `Failed to start the application: ${error.message}`);
     app.quit();
   }
 });
 
+// macOSでもウィンドウを閉じてもアプリを終了しないようにする
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-}); 
+  // Do nothing to keep the app running
+});
+
+// Dockアイコンを非表示にする（macOSのみ）
+if (process.platform === 'darwin') {
+  app.dock.hide();
+} 
