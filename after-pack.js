@@ -43,6 +43,64 @@ function removeUnnecessaryDirs(dir, patterns) {
 }
 
 /**
+ * sharpモジュールの依存ライブラリをコピーする
+ * @param {string} appOutDir - アプリケーションの出力ディレクトリ
+ */
+function copySharpDependencies(appOutDir) {
+  try {
+    const resourcesDir = path.join(appOutDir, 'Contents', 'Resources');
+    const appDir = path.join(resourcesDir, 'app.asar.unpacked');
+    const nodeModulesDir = path.join(appDir, 'node_modules');
+    const sharpDir = path.join(nodeModulesDir, 'sharp');
+    const sharpVendorDir = path.join(sharpDir, 'vendor');
+    
+    // sharpのvendorディレクトリが存在するか確認
+    if (fs.existsSync(sharpVendorDir)) {
+      console.log('Copying Sharp dependencies...');
+      
+      // Frameworksディレクトリにライブラリをコピー
+      const frameworksDir = path.join(appOutDir, 'Contents', 'Frameworks');
+      if (!fs.existsSync(frameworksDir)) {
+        fs.mkdirSync(frameworksDir, { recursive: true });
+      }
+      
+      // vendorディレクトリからlibディレクトリを探す
+      const vendorLibDir = path.join(sharpVendorDir, 'lib');
+      if (fs.existsSync(vendorLibDir)) {
+        // libディレクトリ内のすべてのファイルをFrameworksディレクトリにコピー
+        const files = fs.readdirSync(vendorLibDir);
+        for (const file of files) {
+          const srcPath = path.join(vendorLibDir, file);
+          const destPath = path.join(frameworksDir, file);
+          fs.copyFileSync(srcPath, destPath);
+          console.log(`Copied ${file} to Frameworks directory`);
+        }
+      } else {
+        console.log('Sharp vendor/lib directory not found');
+      }
+      
+      // extraResourcesからsharp-libディレクトリをFrameworksディレクトリにコピー
+      const extraResourcesDir = path.join(resourcesDir, 'sharp-lib');
+      if (fs.existsSync(extraResourcesDir)) {
+        const files = fs.readdirSync(extraResourcesDir);
+        for (const file of files) {
+          const srcPath = path.join(extraResourcesDir, file);
+          const destPath = path.join(frameworksDir, file);
+          fs.copyFileSync(srcPath, destPath);
+          console.log(`Copied ${file} from extraResources to Frameworks directory`);
+        }
+      } else {
+        console.log('extraResources sharp-lib directory not found');
+      }
+    } else {
+      console.log('Sharp vendor directory not found');
+    }
+  } catch (error) {
+    console.error('Error copying Sharp dependencies:', error);
+  }
+}
+
+/**
  * electron-builderのafterPackフック
  */
 exports.default = async function(context) {
@@ -122,6 +180,9 @@ exports.default = async function(context) {
     removeUnnecessaryFiles(nodeModulesDir, unnecessaryFilePatterns);
     removeUnnecessaryDirs(nodeModulesDir, unnecessaryDirPatterns);
   }
+
+  // sharpモジュールの依存ライブラリをコピー
+  copySharpDependencies(appOutDir);
 
   console.log('Cleanup completed!');
 }; 

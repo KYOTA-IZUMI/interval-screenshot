@@ -71,13 +71,21 @@
     "compression": "maximum",
     "asar": true,
     "asarUnpack": [
-      "node_modules/sharp/**/*"
+      "node_modules/sharp/**/*",
+      "node_modules/@img/**/*"
     ],
     "afterPack": "./after-pack.js",
     "directories": {
       "output": "dist"
     },
     "fileAssociations": [],
-    "protocols": []
+    "protocols": [],
+    "extraResources": [
+      {
+        "from": "node_modules/sharp/vendor/lib",
+        "to": "sharp-lib",
+        "filter": ["**/*"]
+      }
+    ]
   }
 }

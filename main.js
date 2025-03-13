@@ -3,6 +3,19 @@ const path = require('path');
 const screenshot = require('screenshot-desktop');
 const simpleGit = require('simple-git');
 const fs = require('fs').promises;
+
+// sharpモジュールのパスを設定
+if (app.isPackaged) {
+  try {
+    // アプリがパッケージ化されている場合、Frameworksディレクトリにライブラリがあるはず
+    process.env.SHARP_DIST_BASE = path.join(process.resourcesPath, 'sharp-lib');
+    process.env.LD_LIBRARY_PATH = path.join(app.getAppPath(), '..', 'Frameworks');
+    process.env.DYLD_LIBRARY_PATH = path.join(app.getAppPath(), '..', 'Frameworks');
+  } catch (error) {
+    console.error('sharpモジュールのパス設定に失敗しました:', error);
+  }
+}
+
 const sharp = require('sharp');
 
 // アプリケーションをDockに表示しない（macOSのみ）
