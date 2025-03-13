@@ -1,7 +1,7 @@
 {
-  "name": "worklog-app",
+  "name": "interval-screenshot",
   "version": "1.0.0",
-  "description": "WorkLog - スクリーンショットを定期的に撮影して作業記録を作成するアプリ",
+  "description": "定期的にスクリーンショットを撮影して作業記録を作成するアプリ",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -21,8 +21,8 @@
     "electron-builder": "^24.9.1"
   },
   "build": {
-    "appId": "com.worklog.app",
-    "productName": "WorkLog",
+    "appId": "com.interval-screenshot.app",
+    "productName": "IntervalScreenshot",
     "files": [
       "**/*",
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",

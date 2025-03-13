@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>設定</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      color: #333;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    .titlebar {
+      -webkit-app-region: drag;
+      height: 38px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .container {
+      padding: 0 20px 20px 20px;
+    }
+    
+    .section {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 10px;
+    }
+    
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      height: 24px;
+    }
+    
+    .form-row label {
+      flex: 1;
+      font-size: 13px;
+    }
+    
+    .form-row input[type="checkbox"] {
+      margin-right: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background-color: #ccc;
+      position: relative;
+      transition: background-color 0.2s;
+      outline: none;
+    }
+    
+    .form-row input[type="checkbox"]:checked {
+      background-color: #007aff;
+    }
+    
+    .form-row input[type="checkbox"]::before {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: white;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+    }
+    
+    .form-row input[type="checkbox"]:checked::before {
+      left: 18px;
+    }
+    
+    .form-row input[type="number"],
+    .form-row input[type="time"] {
+      width: 80px;
+      height: 22px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 0 5px;
+      font-size: 13px;
+      text-align: right;
+    }
+    
+    .form-row input[type="range"] {
+      width: 150px;
+      margin-right: 10px;
+    }
+    
+    .range-value {
+      width: 30px;
+      text-align: right;
+      font-size: 13px;
+    }
+    
+    .help-text {
+      font-size: 11px;
+      color: #666;
+      margin-left: 10px;
+    }
+    
+    .buttons {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    
+    button {
+      background-color: #f2f2f2;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-left: 10px;
+      outline: none;
+    }
+    
+    button:hover {
+      background-color: #e5e5e5;
+    }
+    
+    button.primary {
+      background-color: #007aff;
+      color: white;
+      border-color: #0062cc;
+    }
+    
+    button.primary:hover {
+      background-color: #0062cc;
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="titlebar">
+    <div class="title">設定</div>
+  </div>
+  
+  <div class="container">
+    <div class="section">
+      <div class="section-title">記録</div>
+      
+      <div class="form-row">
+        <label for="interval">スクリーンショット間隔（秒）:</label>
+        <input type="number" id="interval" min="10" value="300">
+      </div>
+      <div class="form-row">
+        <div class="help-text">最小10秒</div>
+      </div>
+      
+      <div class="form-row">
+        <label for="autoStart">起動時に自動的に記録を開始する</label>
+        <input type="checkbox" id="autoStart">
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">画像設定</div>
+      
+      <div class="form-row">
+        <label for="compressToJpeg">スクリーンショットをJPEGに圧縮する</label>
+        <input type="checkbox" id="compressToJpeg">
+      </div>
+      
+      <div id="jpegQualityGroup">
+        <div class="form-row">
+          <label for="jpegQuality">JPEG品質:</label>
+          <input type="range" id="jpegQuality" min="1" max="100" value="80">
+          <span class="range-value" id="jpegQualityValue">80</span>
+        </div>
+        <div class="form-row">
+          <div class="help-text">高い値 = 高品質、大きいファイルサイズ</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">日次レポート</div>
+      
+      <div class="form-row">
+        <label for="createDailyReport">日次HTMLレポートを作成する</label>
+        <input type="checkbox" id="createDailyReport">
+      </div>
+      
+      <div id="dailyReportTimeGroup">
+        <div class="form-row">
+          <label for="dailyReportTime">レポート作成時刻:</label>
+          <input type="time" id="dailyReportTime" value="18:00">
+        </div>
+        <div class="form-row">
+          <div class="help-text">24時間形式（例: 18:00 = 午後6時）</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">通知</div>
+      
+      <div class="form-row">
+        <label for="notifications">スクリーンショット撮影時に通知を表示する</label>
+        <input type="checkbox" id="notifications">
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">システム</div>
+      
+      <div class="form-row">
+        <label for="startAtLogin">ログイン時に自動的に起動する</label>
+        <input type="checkbox" id="startAtLogin">
+      </div>
+      
+      <div class="form-row">
+        <label for="gitEnabled">スクリーンショット用のGitリポジトリを有効にする</label>
+        <input type="checkbox" id="gitEnabled">
+      </div>
+    </div>
+    
+    <div class="buttons">
+      <button onclick="cancel()">キャンセル</button>
+      <button class="primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    // 現在の設定を読み込む
+    async function loadSettings() {
+      const config = await ipcRenderer.invoke('get-config');
+      document.getElementById('interval').value = config.interval / 1000;
+      document.getElementById('autoStart').checked = config.autoStart;
+      document.getElementById('notifications').checked = config.notifications;
+      document.getElementById('startAtLogin').checked = config.startAtLogin;
+      document.getElementById('gitEnabled').checked = config.gitEnabled;
+      document.getElementById('compressToJpeg').checked = config.compressToJpeg;
+      document.getElementById('jpegQuality').value = config.jpegQuality;
+      document.getElementById('jpegQualityValue').textContent = config.jpegQuality;
+      document.getElementById('createDailyReport').checked = config.createDailyReport;
+      document.getElementById('dailyReportTime').value = config.dailyReportTime;
+      
+      // 依存する設定の表示/非表示を更新
+      updateJpegQualityVisibility();
+      updateDailyReportTimeVisibility();
+    }
+    
+    // JPEG品質スライダーの値表示を更新
+    document.getElementById('jpegQuality').addEventListener('input', function() {
+      document.getElementById('jpegQualityValue').textContent = this.value;
+    });
+    
+    // JPEG品質設定の表示/非表示を切り替え
+    document.getElementById('compressToJpeg').addEventListener('change', updateJpegQualityVisibility);
+    
+    function updateJpegQualityVisibility() {
+      const compressToJpeg = document.getElementById('compressToJpeg').checked;
+      document.getElementById('jpegQualityGroup').style.display = compressToJpeg ? 'block' : 'none';
+    }
+    
+    // 日次レポート時間設定の表示/非表示を切り替え
+    document.getElementById('createDailyReport').addEventListener('change', updateDailyReportTimeVisibility);
+    
+    function updateDailyReportTimeVisibility() {
+      const createDailyReport = document.getElementById('createDailyReport').checked;
+      document.getElementById('dailyReportTimeGroup').style.display = createDailyReport ? 'block' : 'none';
+    }
+    
+    // 設定を保存
+    function saveSettings() {
+      const interval = document.getElementById('interval').value;
+      if (interval && !isNaN(interval) && interval >= 10) {
+        const config = {
+          interval: parseInt(interval) * 1000,
+          autoStart: document.getElementById('autoStart').checked,
+          notifications: document.getElementById('notifications').checked,
+          startAtLogin: document.getElementById('startAtLogin').checked,
+          gitEnabled: document.getElementById('gitEnabled').checked,
+          compressToJpeg: document.getElementById('compressToJpeg').checked,
+          jpegQuality: parseInt(document.getElementById('jpegQuality').value),
+          createDailyReport: document.getElementById('createDailyReport').checked,
+          dailyReportTime: document.getElementById('dailyReportTime').value
+        };
+        
+        ipcRenderer.send('update-config', config);
+      } else {
+        alert('間隔には10秒以上の値を入力してください。');
+      }
+    }
+    
+    // キャンセル
+    function cancel() {
+      window.close();
+    }
+    
+    // 設定を読み込む
+    loadSettings();
+  </script>
+</body>
+</html> 

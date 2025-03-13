@@ -1,4 +1,4 @@
-const { app, Tray, Menu, BrowserWindow, ipcMain, nativeImage, dialog, Notification } = require('electron');
+const { app, Tray, Menu, BrowserWindow, ipcMain, nativeImage, dialog, Notification, systemPreferences } = require('electron');
 const path = require('path');
 const screenshot = require('screenshot-desktop');
 const simpleGit = require('simple-git');
@@ -23,7 +23,7 @@ let settingsWindow = null;
 let dailyReportTimer = null;
 
 // アプリケーションの設定を保存するディレクトリ
-const configDir = path.join(app.getPath('documents'), 'WorkLog');
+const configDir = path.join(app.getPath('documents'), 'IntervalScreenshot');
 const configFile = path.join(configDir, 'config.json');
 const screenshotsDir = path.join(configDir, 'screenshots');
 const reportsDir = path.join(configDir, 'reports');
@@ -42,6 +42,44 @@ const defaultConfig = {
 };
 
 let appConfig = { ...defaultConfig };
+
+/**
+ * スクリーンキャプチャ権限を確認する
+ * @returns {boolean} 権限があるかどうか
+ */
+function checkScreenCapturePermission() {
+  if (process.platform !== 'darwin') {
+    return true; // macOS以外では常にtrueを返す
+  }
+  
+  // macOSの場合、画面録画の権限を確認
+  return systemPreferences.getMediaAccessStatus('screen') === 'granted';
+}
+
+/**
+ * スクリーンキャプチャ権限をリクエストする
+ */
+function requestScreenCapturePermission() {
+  if (process.platform !== 'darwin') {
+    return; // macOS以外では何もしない
+  }
+  
+  // 権限がない場合、システム設定を開くように促す
+  const result = dialog.showMessageBoxSync({
+    type: 'info',
+    title: '画面キャプチャ権限が必要です',
+    message: 'このアプリケーションはスクリーンショットを撮影するために画面キャプチャ権限が必要です。',
+    detail: 'システム設定の「プライバシーとセキュリティ」から「画面収録」を選択し、このアプリケーションにチェックを入れてください。',
+    buttons: ['システム設定を開く', 'キャンセル'],
+    defaultId: 0,
+    cancelId: 1
+  });
+  
+  if (result === 0) {
+    // システム設定を開く
+    systemPreferences.openSystemPreferences('security', 'Privacy_ScreenCapture');
+  }
+}
 
 /**
  * アプリケーションの初期化
@@ -66,9 +104,14 @@ async function initializeApp() {
       openAtLogin: appConfig.startAtLogin
     });
 
-    // 自動開始の設定
-    if (appConfig.autoStart) {
-      toggleRecording();
+    // 画面キャプチャ権限を確認
+    if (!checkScreenCapturePermission()) {
+      requestScreenCapturePermission();
+    } else {
+      // 自動開始の設定（権限がある場合のみ）
+      if (appConfig.autoStart) {
+        toggleRecording();
+      }
     }
 
     // 毎日のレポート作成タイマーを設定
@@ -531,9 +574,14 @@ function showSettingsWindow() {
   }
 
   try {
+    // macOS風のネイティブな見た目のウィンドウを作成
     settingsWindow = new BrowserWindow({
       width: 450,
-      height: 500,
+      height: 550,
+      titleBarStyle: 'hiddenInset',
+      vibrancy: 'under-window',
+      visualEffectState: 'active',
+      backgroundColor: '#00ffffff', // 透明な背景
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false
@@ -541,7 +589,8 @@ function showSettingsWindow() {
       resizable: false
     });
 
-    settingsWindow.loadFile('settings.html');
+    // macOS風のネイティブUIを使用するためのHTMLを読み込む
+    settingsWindow.loadFile('settings-native.html');
 
     settingsWindow.on('closed', () => {
       settingsWindow = null;
@@ -666,7 +715,12 @@ app.whenReady().then(async () => {
     
     // アイコンをクリックしたときに設定ウィンドウを表示
     tray.on('click', () => {
-      showSettingsWindow();
+      // 画面キャプチャ権限を確認
+      if (!checkScreenCapturePermission()) {
+        requestScreenCapturePermission();
+      } else {
+        showSettingsWindow();
+      }
     });
   } catch (error) {
     showError('Startup Error', `Failed to start the application: ${error.message}`);
