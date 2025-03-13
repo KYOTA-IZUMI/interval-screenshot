@@ -84,7 +84,35 @@ npm start
 
 # Build the application
 npm run build
+
+# Create a distribution package (DMG file)
+npm run dist
+
+# Create a release and upload to GitHub
+# Note: Requires GITHUB_TOKEN environment variable to be set
+npm run release
 ```
+
+### Release Process
+
+To create a new release and upload it to GitHub:
+
+1. Make sure you have a GitHub personal access token with `repo` scope
+2. Set the token as an environment variable:
+   ```bash
+   export GITHUB_TOKEN=your_github_token
+   ```
+3. Run the release command:
+   ```bash
+   npm run release
+   ```
+
+This will:
+- Increment the version number
+- Build the application
+- Create a new GitHub release with the current version tag
+- Upload the DMG file to the release
+- Copy the DMG file to the local `releases` directory
 
 ## License
 
