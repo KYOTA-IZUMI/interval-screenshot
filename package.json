@@ -1,32 +1,45 @@
 {
   "name": "worklog-app",
   "version": "1.0.0",
-  "description": "Screen capture utility for work logging",
+  "description": "WorkLog - スクリーンショットを定期的に撮影して作業記録を作成するアプリ",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "test": "node test.js"
+    "dist": "electron-builder --mac"
+  },
+  "author": "KYOTA-IZUMI",
+  "license": "MIT",
+  "dependencies": {
+    "screenshot-desktop": "^1.12.7",
+    "sharp": "^0.32.1",
+    "simple-git": "^3.19.1"
+  },
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1"
   },
   "build": {
     "appId": "com.worklog.app",
+    "productName": "WorkLog",
     "mac": {
       "category": "public.app-category.productivity",
-      "target": "dmg"
+      "target": "dmg",
+      "icon": "icon.icns"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     }
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "electron": "^29.1.0",
-    "electron-builder": "^24.12.0"
-  },
-  "dependencies": {
-    "canvas": "^2.11.2",
-    "gifencoder": "^2.0.1",
-    "screenshot-desktop": "^1.15.1",
-    "sharp": "^0.33.2",
-    "simple-git": "^3.27.0"
   }
 }
