@@ -13,7 +13,7 @@
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/[your-username]/worklog-app.git
+git clone https://github.com/KYOTA-IZUMI/worklog-app.git
 cd worklog-app
 
 # 依存パッケージをインストール
