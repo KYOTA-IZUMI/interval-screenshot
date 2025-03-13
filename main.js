@@ -5,6 +5,11 @@ const simpleGit = require('simple-git');
 const fs = require('fs').promises;
 const sharp = require('sharp');
 
+// アプリケーションをDockに表示しない（macOSのみ）
+if (process.platform === 'darwin') {
+  app.dock.hide();
+}
+
 // アイコンデータは外部ファイルから読み込む
 let iconData;
 try {
@@ -731,9 +736,4 @@ app.whenReady().then(async () => {
 // macOSでウィンドウを閉じてもアプリを終了しないようにする
 app.on('window-all-closed', () => {
   // Do nothing to keep the app running
-});
-
-// Dockアイコンを非表示にする（macOSのみ）
-if (process.platform === 'darwin') {
-  app.dock.hide();
-} 
+}); 

@@ -5,8 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
-    "dist": "electron-builder --mac",
+    "build": "node version-increment.js && electron-builder",
+    "dist": "node version-increment.js && electron-builder --mac",
     "postinstall": "electron-builder install-app-deps"
   },
   "author": "KYOTA-IZUMI",
@@ -47,7 +47,10 @@
       "target": "dmg",
       "icon": "icon.icns",
       "darkModeSupport": true,
-      "hardenedRuntime": true
+      "hardenedRuntime": true,
+      "extendInfo": {
+        "LSUIElement": true
+      }
     },
     "dmg": {
       "contents": [
