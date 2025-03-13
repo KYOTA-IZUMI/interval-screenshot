@@ -1,6 +1,6 @@
 {
   "name": "interval-screenshot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "定期的にスクリーンショットを撮影して作業記録を作成するアプリ",
   "main": "main.js",
   "scripts": {
