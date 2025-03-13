@@ -3,8 +3,6 @@ const path = require('path');
 const screenshot = require('screenshot-desktop');
 const simpleGit = require('simple-git');
 const fs = require('fs').promises;
-const { createCanvas, loadImage } = require('canvas');
-const GIFEncoder = require('gifencoder');
 const sharp = require('sharp');
 
 // アイコンデータ（Base64エンコード）- より洗練されたカメラアイコン
@@ -15,13 +13,13 @@ let isRecording = false;
 let screenshotInterval = 300000; // デフォルト5分
 let screenshotTimer = null;
 let settingsWindow = null;
-let dailyGifTimer = null;
+let dailyReportTimer = null;
 
 // アプリケーションの設定を保存するディレクトリ
 const configDir = path.join(app.getPath('documents'), 'WorkLog');
 const configFile = path.join(configDir, 'config.json');
 const screenshotsDir = path.join(configDir, 'screenshots');
-const gifDir = path.join(configDir, 'daily_gifs');
+const reportsDir = path.join(configDir, 'reports');
 
 // デフォルト設定
 const defaultConfig = {
@@ -32,8 +30,8 @@ const defaultConfig = {
   gitEnabled: true, // Gitリポジトリを使用するかどうか
   compressToJpeg: true, // JPEGに圧縮するかどうか
   jpegQuality: 80, // JPEG圧縮品質（0-100）
-  createDailyGif: false, // 毎日GIFを作成するかどうか
-  dailyGifTime: "18:00" // GIF作成時刻（24時間形式）
+  createDailyReport: false, // 毎日レポートを作成するかどうか
+  dailyReportTime: "18:00" // レポート作成時刻（24時間形式）
 };
 
 let appConfig = { ...defaultConfig };
@@ -46,7 +44,7 @@ async function initializeApp() {
     // 設定ディレクトリの作成
     await fs.mkdir(configDir, { recursive: true });
     await fs.mkdir(screenshotsDir, { recursive: true });
-    await fs.mkdir(gifDir, { recursive: true });
+    await fs.mkdir(reportsDir, { recursive: true });
 
     // 設定ファイルの読み込み
     await loadConfig();
@@ -66,9 +64,9 @@ async function initializeApp() {
       toggleRecording();
     }
 
-    // 毎日のGIF作成タイマーを設定
-    if (appConfig.createDailyGif) {
-      scheduleDailyGif();
+    // 毎日のレポート作成タイマーを設定
+    if (appConfig.createDailyReport) {
+      scheduleDailyReport();
     }
   } catch (error) {
     showError('Initialization Error', `Failed to initialize the application: ${error.message}`);
@@ -76,17 +74,17 @@ async function initializeApp() {
 }
 
 /**
- * 毎日のGIF作成タイマーをスケジュールする
+ * 毎日のレポート作成タイマーをスケジュールする
  */
-function scheduleDailyGif() {
+function scheduleDailyReport() {
   // 既存のタイマーをクリア
-  if (dailyGifTimer) {
-    clearTimeout(dailyGifTimer);
+  if (dailyReportTimer) {
+    clearTimeout(dailyReportTimer);
   }
 
   // 次の実行時間を計算
   const now = new Date();
-  const [hours, minutes] = appConfig.dailyGifTime.split(':').map(Number);
+  const [hours, minutes] = appConfig.dailyReportTime.split(':').map(Number);
   const targetTime = new Date(now);
   targetTime.setHours(hours, minutes, 0, 0);
   
@@ -98,16 +96,16 @@ function scheduleDailyGif() {
   const timeUntilTarget = targetTime - now;
   
   // タイマーを設定
-  dailyGifTimer = setTimeout(async () => {
-    await createDailyGif();
-    scheduleDailyGif(); // 次の日のタイマーを設定
+  dailyReportTimer = setTimeout(async () => {
+    await createDailyReport();
+    scheduleDailyReport(); // 次の日のタイマーを設定
   }, timeUntilTarget);
 }
 
 /**
- * 今日撮影したスクリーンショットからGIFを作成する
+ * 今日撮影したスクリーンショットからHTMLレポートを作成する
  */
-async function createDailyGif() {
+async function createDailyReport() {
   try {
     const today = new Date().toISOString().split('T')[0];
     const todayPrefix = `wl_${today.replace(/-/g, '')}`;
@@ -124,49 +122,110 @@ async function createDailyGif() {
     // ファイルを時間順にソート
     todayFiles.sort();
     
-    // GIFファイル名
-    const gifFilename = `${todayPrefix}_summary.gif`;
-    const gifPath = path.join(gifDir, gifFilename);
+    // HTMLレポートファイル名
+    const reportFilename = `${todayPrefix}_report.html`;
+    const reportPath = path.join(reportsDir, reportFilename);
     
-    // GIFエンコーダーを設定
-    const encoder = new GIFEncoder(800, 600);
-    const stream = encoder.createReadStream().pipe(fs.createWriteStream(gifPath));
+    // HTMLレポートを作成
+    let htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>WorkLog Daily Report - ${today}</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f5f5f5;
+          color: #333;
+        }
+        h1 {
+          color: #007AFF;
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .screenshot-container {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 20px;
+        }
+        .screenshot-item {
+          background-color: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .screenshot-item img {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        .screenshot-info {
+          padding: 10px;
+          border-top: 1px solid #eee;
+        }
+        .screenshot-time {
+          font-weight: 500;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>WorkLog Daily Report - ${today}</h1>
+      <div class="screenshot-container">
+    `;
     
-    encoder.start();
-    encoder.setRepeat(0);   // 0 = 無限ループ
-    encoder.setDelay(500);  // フレーム間の遅延（ミリ秒）
-    encoder.setQuality(10); // 画質（低いほど高品質）
-    
-    // 各スクリーンショットをGIFに追加
+    // 各スクリーンショットをHTMLに追加
     for (const file of todayFiles) {
       const filePath = path.join(screenshotsDir, file);
-      const image = await loadImage(filePath);
       
-      // キャンバスを作成してイメージをリサイズ
-      const canvas = createCanvas(800, 600);
-      const ctx = canvas.getContext('2d');
+      // ファイル名から時間を抽出（wl_YYYYMMDD_HHMMSS.jpg/png）
+      const timeMatch = file.match(/_(\d{2})(\d{2})(\d{2})\./);
+      let timeStr = '';
       
-      // 画像をキャンバスに描画（リサイズ）
-      ctx.drawImage(image, 0, 0, 800, 600);
+      if (timeMatch) {
+        const hours = timeMatch[1];
+        const minutes = timeMatch[2];
+        const seconds = timeMatch[3];
+        timeStr = `${hours}:${minutes}:${seconds}`;
+      }
       
-      // フレームを追加
-      encoder.addFrame(ctx);
+      // 相対パスを計算
+      const relativeFilePath = path.relative(reportsDir, filePath).replace(/\\/g, '/');
+      
+      htmlContent += `
+        <div class="screenshot-item">
+          <img src="${relativeFilePath}" alt="Screenshot at ${timeStr}">
+          <div class="screenshot-info">
+            <div class="screenshot-time">${timeStr}</div>
+          </div>
+        </div>
+      `;
     }
     
-    encoder.finish();
+    htmlContent += `
+      </div>
+    </body>
+    </html>
+    `;
+    
+    // HTMLファイルを保存
+    await fs.writeFile(reportPath, htmlContent);
     
     // 通知を表示
     if (appConfig.notifications) {
       new Notification({
-        title: 'WorkLog - Daily Summary',
-        body: `Created daily summary GIF with ${todayFiles.length} screenshots`
+        title: 'WorkLog - Daily Report',
+        body: `Created daily report with ${todayFiles.length} screenshots`
       }).show();
     }
     
-    return gifPath;
+    return reportPath;
   } catch (error) {
-    console.error('Error creating daily GIF:', error);
-    showError('GIF Creation Error', `Failed to create daily GIF: ${error.message}`);
+    console.error('Error creating daily report:', error);
+    showError('Report Creation Error', `Failed to create daily report: ${error.message}`);
   }
 }
 
@@ -240,13 +299,13 @@ async function updateConfig(newConfig) {
       screenshotTimer = setInterval(takeScreenshot, screenshotInterval);
     }
     
-    // 毎日のGIF作成設定が変更された場合
-    if (oldConfig.createDailyGif !== appConfig.createDailyGif || 
-        oldConfig.dailyGifTime !== appConfig.dailyGifTime) {
-      if (appConfig.createDailyGif) {
-        scheduleDailyGif();
-      } else if (dailyGifTimer) {
-        clearTimeout(dailyGifTimer);
+    // 毎日のレポート作成設定が変更された場合
+    if (oldConfig.createDailyReport !== appConfig.createDailyReport || 
+        oldConfig.dailyReportTime !== appConfig.dailyReportTime) {
+      if (appConfig.createDailyReport) {
+        scheduleDailyReport();
+      } else if (dailyReportTimer) {
+        clearTimeout(dailyReportTimer);
       }
     }
   } catch (error) {
@@ -396,15 +455,15 @@ function updateMenu() {
         }
       },
       {
-        label: 'Create Daily GIF Now',
+        label: 'Create Daily Report Now',
         click: async () => {
           try {
-            const gifPath = await createDailyGif();
-            if (gifPath) {
-              require('electron').shell.openPath(path.dirname(gifPath));
+            const reportPath = await createDailyReport();
+            if (reportPath) {
+              require('electron').shell.openPath(reportPath);
             }
           } catch (error) {
-            showError('GIF Error', `Failed to create GIF: ${error.message}`);
+            showError('Report Error', `Failed to create report: ${error.message}`);
           }
         }
       },

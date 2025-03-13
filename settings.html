@@ -136,18 +136,18 @@
       <div class="help-text">Higher values = better quality, larger file size</div>
     </div>
     
-    <div class="section-title">Daily Summary</div>
+    <div class="section-title">Daily Report</div>
     
     <div class="form-group">
       <div class="checkbox-group">
-        <input type="checkbox" id="createDailyGif">
-        <label for="createDailyGif">Create daily summary GIF</label>
+        <input type="checkbox" id="createDailyReport">
+        <label for="createDailyReport">Create daily HTML report</label>
       </div>
     </div>
     
-    <div class="form-group" id="dailyGifTimeGroup">
-      <label for="dailyGifTime">Time to create daily GIF:</label>
-      <input type="time" id="dailyGifTime" value="18:00">
+    <div class="form-group" id="dailyReportTimeGroup">
+      <label for="dailyReportTime">Time to create daily report:</label>
+      <input type="time" id="dailyReportTime" value="18:00">
       <div class="help-text">24-hour format (e.g., 18:00 for 6:00 PM)</div>
     </div>
     
@@ -196,12 +196,12 @@
       document.getElementById('compressToJpeg').checked = config.compressToJpeg;
       document.getElementById('jpegQuality').value = config.jpegQuality;
       document.getElementById('jpegQualityValue').textContent = config.jpegQuality;
-      document.getElementById('createDailyGif').checked = config.createDailyGif;
-      document.getElementById('dailyGifTime').value = config.dailyGifTime;
+      document.getElementById('createDailyReport').checked = config.createDailyReport;
+      document.getElementById('dailyReportTime').value = config.dailyReportTime;
       
       // Update visibility of dependent settings
       updateJpegQualityVisibility();
-      updateDailyGifTimeVisibility();
+      updateDailyReportTimeVisibility();
     }
     
     // Update JPEG quality slider value display
@@ -217,12 +217,12 @@
       document.getElementById('jpegQualityGroup').style.display = compressToJpeg ? 'block' : 'none';
     }
     
-    // Toggle visibility of daily GIF time settings
-    document.getElementById('createDailyGif').addEventListener('change', updateDailyGifTimeVisibility);
+    // Toggle visibility of daily report time settings
+    document.getElementById('createDailyReport').addEventListener('change', updateDailyReportTimeVisibility);
     
-    function updateDailyGifTimeVisibility() {
-      const createDailyGif = document.getElementById('createDailyGif').checked;
-      document.getElementById('dailyGifTimeGroup').style.display = createDailyGif ? 'block' : 'none';
+    function updateDailyReportTimeVisibility() {
+      const createDailyReport = document.getElementById('createDailyReport').checked;
+      document.getElementById('dailyReportTimeGroup').style.display = createDailyReport ? 'block' : 'none';
     }
     
     function saveSettings() {
@@ -236,8 +236,8 @@
           gitEnabled: document.getElementById('gitEnabled').checked,
           compressToJpeg: document.getElementById('compressToJpeg').checked,
           jpegQuality: parseInt(document.getElementById('jpegQuality').value),
-          createDailyGif: document.getElementById('createDailyGif').checked,
-          dailyGifTime: document.getElementById('dailyGifTime').value
+          createDailyReport: document.getElementById('createDailyReport').checked,
+          dailyReportTime: document.getElementById('dailyReportTime').value
         };
         
         ipcRenderer.send('update-config', config);
