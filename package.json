@@ -1,6 +1,6 @@
 {
   "name": "interval-screenshot",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "定期的にスクリーンショットを撮影して作業記録を作成するアプリ",
   "main": "main.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "build": "node version-increment.js && electron-builder",
     "dist": "node version-increment.js && electron-builder --mac",
     "postinstall": "electron-builder install-app-deps",
-    "release": "npm run dist && node github-release.js"
+    "release": "npm run dist && node github-release.mjs"
   },
   "author": "KYOTA-IZUMI",
   "license": "MIT",
