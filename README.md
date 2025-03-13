@@ -1,8 +1,8 @@
-# WorkLog App
+# IntervalScreenshot
 
 An automated work logging desktop application that periodically captures screenshots and manages them in a Git repository.
 
-![WorkLog App](screenshots/app_screenshot.png)
+![IntervalScreenshot App](screenshots/app_screenshot.png)
 
 ## Features
 
@@ -15,7 +15,7 @@ An automated work logging desktop application that periodically captures screens
 
 ### Method 1: Download from Releases
 
-1. Download the latest DMG file from the [releases page](https://github.com/KYOTA-IZUMI/worklog-app/releases)
+1. Download the latest DMG file from the [releases page](https://github.com/KYOTA-IZUMI/interval-screenshot/releases)
 2. Open the downloaded DMG file and drag & drop the application to the Applications folder
 3. Launch the application
 
@@ -23,8 +23,8 @@ An automated work logging desktop application that periodically captures screens
 
 ```bash
 # Clone the repository
-git clone https://github.com/KYOTA-IZUMI/worklog-app.git
-cd worklog-app
+git clone https://github.com/KYOTA-IZUMI/interval-screenshot.git
+cd interval-screenshot
 
 # Install dependencies
 npm install
@@ -56,8 +56,8 @@ Once recording starts, screenshots will be automatically taken at the set interv
 ### Setting the Interval
 
 1. Click the icon in the menu bar to display the menu
-2. Click "Set Interval"
-3. Enter the interval in seconds (minimum 10 seconds) in the dialog that appears
+2. Click "Settings"
+3. Adjust the screenshot interval in seconds (minimum 10 seconds)
 4. Click the "Save" button
 
 ![Interval Settings](screenshots/interval_settings.png)
@@ -65,9 +65,9 @@ Once recording starts, screenshots will be automatically taken at the set interv
 ### Opening the Screenshots Folder
 
 1. Click the icon in the menu bar to display the menu
-2. Click "Open Folder"
+2. Click "Open Screenshots Folder"
 
-Screenshots are saved in the `~/Documents/WorkLog/screenshots` folder and managed as a Git repository.
+Screenshots are saved in the `~/Documents/IntervalScreenshot/screenshots` folder and managed as a Git repository.
 
 ![Screenshots Folder](screenshots/screenshots_folder.png)
 
@@ -89,3 +89,7 @@ npm run build
 ## License
 
 MIT 
+
+---
+
+このアプリケーションは生成AIを使って開発されました。 
